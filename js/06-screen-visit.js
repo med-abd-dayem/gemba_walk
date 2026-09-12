@@ -49,7 +49,7 @@ function renderVisite(){
     <div class="progwrap">
       <div class="progbar"><span style="width:${c.total?Math.round(c.ans/c.total*100):0}%"></span></div>
       <div class="progmeta"><span>${c.ans}/${c.total} évalués</span>
-        <span class="conf">${conf==null?'Conformité —':'Conformité '+conf+'%'} · <span style="color:var(--nok)">${c.nok} NOK</span></span></div>
+        <span class="conf">${conf==null?'Conformité —':'Conformité '+conf+'%'} · <span style="color:var(--nok)">${c.nok} écart(s)</span></span></div>
     </div>
     <div id="axes">${t.axes.map(a=>axeBlock(a,v)).join('')}</div>
     <button class="btn btn-primary" id="v-finish" style="margin-top:6px">Terminer la visite</button>
@@ -64,7 +64,7 @@ function axeBlock(a,v){
   return `<div class="axe ${open?'open':''}" data-axe="${a.id}">
     <div class="axe-head" data-toggle="${a.id}">
       <span class="an">${esc(a.name)}</span>
-      <span class="ac">${ok} OK · ${nok} NOK</span>
+      <span class="ac">${ok} Conf. · ${nok} Écart</span>
       <span class="caret"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 6l6 6-6 6"/></svg></span>
     </div>
     <div class="axe-body">${a.criteria.map(cr=>critBlock(a,cr,v)).join('')}</div>
@@ -85,8 +85,8 @@ function critBlock(a,cr,v){
   return `<div class="crit ${isNok?'is-nok':''} ${collapsed?'collapsed':''}" data-crit="${cr.id}" data-axe="${a.id}">
     <div class="cl" style="display:flex;align-items:center;gap:8px"><span style="flex:1">${esc(cr.label)}</span><button class="crit-caret" data-crit-toggle aria-label="Réduire"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="seg">
-      <button data-set="ok" class="${r.status==='ok'?'sel-ok':''}">OK</button>
-      <button data-set="nok" class="${r.status==='nok'?'sel-nok':''}">NOK</button>
+      <button data-set="ok" class="${r.status==='ok'?'sel-ok':''}">Conforme</button>
+      <button data-set="nok" class="${r.status==='nok'?'sel-nok':''}">Écart</button>
     </div>
     <div class="crit-sum" data-crit-sum>${esc(critSummary(r))}</div>
     <div class="detail">
@@ -154,10 +154,10 @@ function bindVisite(){
   function updateProg(){
     const c=counts(v);const conf=conformity(v);
     $('.progbar>span').style.width=(c.total?Math.round(c.ans/c.total*100):0)+'%';
-    $('.progmeta').innerHTML=`<span>${c.ans}/${c.total} évalués</span><span class="conf">${conf==null?'Conformité —':'Conformité '+conf+'%'} · <span style="color:var(--nok)">${c.nok} NOK</span></span>`;
+    $('.progmeta').innerHTML=`<span>${c.ans}/${c.total} évalués</span><span class="conf">${conf==null?'Conformité —':'Conformité '+conf+'%'} · <span style="color:var(--nok)">${c.nok} écart(s)</span></span>`;
     // maj compteurs d'axe
     const t=state.cache.templates.find(x=>x.id===v.templateId);
-    t.axes.forEach(a=>{let ok=0,nok=0;a.criteria.forEach(cr=>{const r=v.results[cr.id];if(r){if(r.status==='ok')ok++;if(r.status==='nok')nok++;}});const el=app.querySelector(`[data-axe="${a.id}"] .ac`);if(el)el.textContent=`${ok} OK · ${nok} NOK`;});
+    t.axes.forEach(a=>{let ok=0,nok=0;a.criteria.forEach(cr=>{const r=v.results[cr.id];if(r){if(r.status==='ok')ok++;if(r.status==='nok')nok++;}});const el=app.querySelector(`[data-axe="${a.id}"] .ac`);if(el)el.textContent=`${ok} Conf. · ${nok} Écart`;});
   }
   window._updateProg=updateProg;
 }
@@ -180,7 +180,7 @@ function renderResume(){
   <div class="screen">
     <div class="stats">
       <div class="tile ${conf!=null&&conf<70?'alert':'good'}"><div class="k">Conformité</div><div class="v">${conf==null?'—':conf+'<small>%</small>'}</div></div>
-      <div class="tile ${c.nok?'alert':''}"><div class="k">Écarts (NOK)</div><div class="v">${c.nok}</div></div>
+      <div class="tile ${c.nok?'alert':''}"><div class="k">Écarts</div><div class="v">${c.nok}</div></div>
     </div>
     <div class="section-title">${noks.length?noks.length+' action(s) générée(s)':'Aucun écart relevé'}</div>
     ${noks.length?`<div class="card">${noks.map(n=>`<div class="lrow"><div class="main"><div class="t">${esc(n.label)}</div><div class="m">${esc(n.axe)}${n.observation?' · '+esc(n.observation):''}</div></div>${n.urgence==='urgente'?`<span class="badge open">Urgente</span>`:''}</div>`).join('')}</div>`:''}

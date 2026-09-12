@@ -13,7 +13,7 @@ function renderHistorique(){
     <div class="section-title">Évolution de la conformité${_histSect!=='__all'?' — '+esc(_histSect):''}</div>
     <div class="card card-pad">${trendChart(done)}</div>
     ${(()=>{const st=axisStats(done);return st.length?`<div class="section-title">Statistiques par axe</div>
-      <div class="card card-pad"><div class="donuts">${st.map(a=>`<div class="donut"><div class="d-chart">${donutSVG(a.conf,a.ok,a.nok)}</div><div class="d-name">${esc(a.name)}</div><div class="d-sub">${a.ok} OK · <span style="color:var(--nok)">${a.nok} NOK</span></div></div>`).join('')}</div></div>`:'';})()}
+      <div class="card card-pad"><div class="donuts">${st.map(a=>`<div class="donut"><div class="d-chart">${donutSVG(a.conf,a.ok,a.nok)}</div><div class="d-name">${esc(a.name)}</div><div class="d-sub">${a.ok} Conf. · <span style="color:var(--nok)">${a.nok} Écart</span></div></div>`).join('')}</div></div>`:'';})()}
     <div class="section-title">${_histSect==='__all'?'Toutes les visites':'Visites — '+esc(_histSect)}</div>
     ${visits.length?`<div class="card">${visits.map(v=>`
       <div class="lrow" data-visit="${v.id}">
@@ -55,7 +55,7 @@ function renderVisitDetail(){
     if(items.length)rows.push(`<div class="section-title">${esc(a.name)}</div><div class="card">${items.map(({cr,r})=>`
       <div class="lrow"><div class="main"><div class="t">${esc(cr.label)}</div>${r.observation?`<div class="m">${esc(r.observation)}</div>`:''}
       ${getPhotos(r).map(p=>`<div class="photo-thumb" style="margin:6px 6px 0 0"><img src="${p}"></div>`).join('')}</div>
-      <span class="badge ${r.status==='ok'?'g-ok':r.status==='nok'?'g-nok':'g-amber'}">${r.status==='na'?'N/A':r.status.toUpperCase()}</span></div>`).join('')}</div>`);
+      <span class="badge ${r.status==='ok'?'g-ok':r.status==='nok'?'g-nok':'g-amber'}">${statusLabel(r.status)}</span></div>`).join('')}</div>`);
   });
   app.innerHTML=`
   <header class="appbar"><span class="back" data-go="historique"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></span>
@@ -65,7 +65,7 @@ function renderVisitDetail(){
     ${v.code||v.secteur?`<p class="muted" style="font-size:12.5px;margin:0 0 12px">${v.secteur?'<b>'+esc(v.secteur)+'</b>':''}${v.secteur&&v.code?' · ':''}${esc(v.code||'')}</p>`:''}
     <div class="stats">
       <div class="tile ${conf!=null&&conf<70?'alert':'good'}"><div class="k">Conformité</div><div class="v">${conf==null?'—':conf+'<small>%</small>'}</div></div>
-      <div class="tile ${c.nok?'alert':''}"><div class="k">OK / NOK</div><div class="v" style="font-size:22px">${c.ok} / ${c.nok}</div></div>
+      <div class="tile ${c.nok?'alert':''}"><div class="k">Conf. / Écart</div><div class="v" style="font-size:22px">${c.ok} / ${c.nok}</div></div>
     </div>
     ${rows.join('')||'<div class="empty"><p>Aucun élément évalué</p></div>'}
     ${v.pointsForts&&v.pointsForts.trim()?`<div class="section-title">Points forts</div><div class="card card-pad" style="font-size:14px;white-space:pre-line">${esc(v.pointsForts.trim())}</div>`:''}

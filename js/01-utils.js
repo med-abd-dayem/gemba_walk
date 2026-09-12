@@ -9,6 +9,7 @@ const LOGO_SNIM='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB0CAYAAABOp
 /* ---------- Utilitaires ---------- */
 const $ = (s,el=document)=>el.querySelector(s);
 const uid = (p='id')=>p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function statusLabel(st){return st==='ok'?'Conforme':st==='nok'?'Écart':st==='na'?'N/A':'—';}
 function getPhotos(o){if(!o)return[];if(Array.isArray(o.photos))return o.photos;if(o.photo)return[o.photo];return[];}
 const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const todayISO = ()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};

@@ -1,5 +1,5 @@
 /* Gemba Walk — Service Worker (mode hors ligne) — v2 modulaire */
-const CACHE = 'gemba-v3';
+const CACHE = 'gemba-v4';
 const ASSETS = [
   './',
   './index.html',
