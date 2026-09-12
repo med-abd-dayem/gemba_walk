@@ -37,7 +37,6 @@ function renderActions(){
 }
 function actionCard(a){
   const late=a.statut==='ouverte'&&a.echeance&&a.echeance<todayISO();const ld=lateDays(a);
-  const gb=a.gravite==='critique'?'g-nok':a.gravite==='majeure'?'g-amber':a.gravite==='mineure'?'g-ok':'';
   const cd=closureDays(a);
   return `<div class="card card-pad" data-act="${a.id}" style="${late?'border-color:var(--nok)':''}">
     <div style="display:flex;gap:8px;align-items:flex-start">
@@ -48,7 +47,6 @@ function actionCard(a){
       ${late?`<span class="badge late">EN RETARD${ld?' · '+ld+'j':''}</span>`:a.statut==='terminee'?'<span class="badge done">Clôturée</span>':a.urgence==='urgente'?'<span class="badge open">Urgente</span>':''}
     </div>
     ${a.observation?`<div class="muted" style="font-size:13.5px;margin-top:8px">${esc(a.observation)}</div>`:''}
-    ${a.gravite?`<span class="badge ${gb}" style="margin-top:8px">Gravité : ${a.gravite}</span>`:''}
     ${getPhotos(a).map(p=>`<div class="photo-thumb" style="margin:8px 6px 0 0"><img src="${p}"></div>`).join('')}
     ${a.statut==='ouverte'?`
       <div class="action-detail">

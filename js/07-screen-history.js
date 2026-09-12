@@ -12,6 +12,8 @@ function renderHistorique(){
     ${secteurs.length?`<div class="chips" style="margin-bottom:14px">${F('__all','Tous les secteurs')}${secteurs.map(s=>F(s,s)).join('')}</div>`:''}
     <div class="section-title">Évolution de la conformité${_histSect!=='__all'?' — '+esc(_histSect):''}</div>
     <div class="card card-pad">${trendChart(done)}</div>
+    ${(()=>{const st=axisStats(done);return st.length?`<div class="section-title">Statistiques par axe</div>
+      <div class="card card-pad"><div class="donuts">${st.map(a=>`<div class="donut"><div class="d-chart">${donutSVG(a.conf,a.ok,a.nok)}</div><div class="d-name">${esc(a.name)}</div><div class="d-sub">${a.ok} OK · <span style="color:var(--nok)">${a.nok} NOK</span></div></div>`).join('')}</div></div>`:'';})()}
     <div class="section-title">${_histSect==='__all'?'Toutes les visites':'Visites — '+esc(_histSect)}</div>
     ${visits.length?`<div class="card">${visits.map(v=>`
       <div class="lrow" data-visit="${v.id}">

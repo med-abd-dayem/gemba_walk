@@ -16,11 +16,12 @@ function renderReglages(){
     <button class="pill-add" id="add-sect" style="margin:8px 15px 14px;border-radius:9px;padding:9px">＋ Secteur</button></div>
     <button class="pill-add" id="save-sect" style="margin-bottom:20px;background:var(--steel);color:#fff;border-style:solid;border-color:var(--steel)">Enregistrer les secteurs</button>
 
-    <div class="section-title">Données</div>
+    <div class="section-title">Sauvegarde des données</div>
     <div class="card card-pad">
-      <button class="btn btn-ghost" id="export">Exporter une sauvegarde (.json)</button>
-      <label class="btn btn-ghost" style="margin-top:10px;display:flex">Importer une sauvegarde<input type="file" accept="application/json" id="import" hidden></label>
-      <p class="fab-note" style="margin-top:12px;text-align:left">Les données sont stockées uniquement sur cet appareil. Pensez à exporter régulièrement pour ne rien perdre.</p>
+      <div id="backup-state" style="font-size:13px;font-weight:600;margin-bottom:12px">${backupStateHtml()}</div>
+      <button class="btn btn-primary" id="backup-now">Sauvegarder maintenant</button>
+      <label class="btn btn-ghost" style="margin-top:10px;display:flex">Restaurer une sauvegarde<input type="file" accept="application/json" id="import" hidden></label>
+      <p class="fab-note" style="margin-top:12px;text-align:left">Les données sont stockées uniquement sur cet appareil. « Sauvegarder » crée un fichier <code>.json</code> à envoyer par e-mail / WhatsApp (à toi-même ou à un responsable). Il permet de <b>tout restaurer</b> en cas de perte du téléphone.</p>
     </div>
 
     <div class="section-title">Application</div>
@@ -36,13 +37,31 @@ function renderReglages(){
   const addS=$('#add-sect');if(addS)addS.onclick=async()=>{const list=collectSect();list.push('');await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;renderReglages();};
   app.querySelectorAll('[data-sect-del]').forEach(b=>b.onclick=async()=>{const list=collectSect();list.splice(+b.getAttribute('data-sect-del'),1);await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;renderReglages();});
   const saveS=$('#save-sect');if(saveS)saveS.onclick=async()=>{const list=collectSect();await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;toast('Secteurs enregistrés');renderReglages();};
-  $('#export').onclick=exportData;
+  const bn=$('#backup-now');if(bn)bn.onclick=async()=>{await shareBackup();renderReglages();};
   $('#import').onchange=importData;
 }
-async function exportData(){
+function backupStateHtml(){
+  const d=backupDaysAgo();
+  if(d===null)return '<span style="color:var(--nok)">⚠️ Aucune sauvegarde effectuée</span>';
+  if(d===0)return '<span style="color:var(--ok)">✓ Dernière sauvegarde : aujourd\'hui</span>';
+  const col=d>=3?'var(--nok)':d>=1?'var(--amber)':'var(--ok)';
+  return `<span style="color:${col}">Dernière sauvegarde : il y a ${d} jour${d>1?'s':''}</span>`;
+}
+async function buildBackupBlob(){
   const data={templates:await Store.getAll('templates'),visits:await Store.getAll('visits'),actions:await Store.getAll('actions'),settings:await Store.getAll('settings'),exportedAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='gemba-sauvegarde-'+todayISO()+'.json';a.click();URL.revokeObjectURL(url);toast('Sauvegarde exportée');
+  return new Blob([JSON.stringify(data)],{type:'application/json'});
+}
+function backupDaysAgo(){const m=state.cache.backupMeta;if(!m||!m.lastBackup)return null;return Math.floor((Date.now()-m.lastBackup)/86400000);}
+async function shareBackup(){
+  const blob=await buildBackupBlob();const fn='gemba-sauvegarde-'+todayISO()+'.json';
+  let shared=false;
+  try{const file=new File([blob],fn,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Sauvegarde Gemba Walk'});shared=true;}
+  }catch(e){if(e&&e.name==='AbortError')shared=true;}
+  if(!shared){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);}
+  await Store.put('settings',{id:'backupMeta',lastBackup:Date.now()},false);
+  state.cache.backupMeta={id:'backupMeta',lastBackup:Date.now()};
+  toast('Sauvegarde prête');
 }
 async function importData(e){
   const f=e.target.files[0];if(!f)return;

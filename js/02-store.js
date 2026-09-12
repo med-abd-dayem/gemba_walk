@@ -55,5 +55,6 @@ async function loadCache(){
   state.cache.visits=(await Store.getAll('visits')).sort((a,b)=>b.createdAt-a.createdAt);
   state.cache.actions=(await Store.getAll('actions')).sort((a,b)=>b.createdAt-a.createdAt);
   const sc=await Store.get('settings','sectors');state.cache.sectors=(sc&&sc.list)?sc.list:[];
+  const bm=await Store.get('settings','backupMeta');state.cache.backupMeta=bm||null;
 }
 

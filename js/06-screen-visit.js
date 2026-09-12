@@ -76,7 +76,7 @@ function photoZoneHtml(photos){
   const add=`<label style="display:inline-block;vertical-align:top"><span class="photo-btn">${camIcon}${photos&&photos.length?'Ajouter':'Ajouter une photo'}</span><input type="file" accept="image/*" capture="environment" data-photo hidden></label>`;
   return thumbs+add;
 }
-function critSummary(r){r=r||{};const nph=getPhotos(r).length;const s=[r.gravite?('Gravité : '+r.gravite):'',r.urgence==='urgente'?'Urgente':'',nph?(nph+' photo'+(nph>1?'s':'')):''].filter(Boolean).join('  ·  ');return s||'Détails masqués — appuyez sur le chevron pour ouvrir';}
+function critSummary(r){r=r||{};const nph=getPhotos(r).length;const s=[r.urgence==='urgente'?'Urgente':'',nph?(nph+' photo'+(nph>1?'s':'')):''].filter(Boolean).join('  ·  ');return s||'Détails masqués — appuyez sur le chevron pour ouvrir';}
 let _collapsedCrits=new Set();
 function critBlock(a,cr,v){
   const r=v.results[cr.id]||{};
@@ -92,13 +92,7 @@ function critBlock(a,cr,v){
     <div class="detail">
       <label>Observation</label>
       <textarea data-obs placeholder="Décrire l'écart constaté…">${esc(r.observation||'')}</textarea>
-      <label style="margin-top:10px">Gravité</label>
-      <div class="chips" data-grav>
-        <button class="chip ${r.gravite==='mineure'?'sel-min':''}" data-g="mineure">Mineure</button>
-        <button class="chip ${r.gravite==='majeure'?'sel-maj':''}" data-g="majeure">Majeure</button>
-        <button class="chip ${r.gravite==='critique'?'sel-crit':''}" data-g="critique">Critique</button>
-      </div>
-      <label>Urgence</label>
+      <label style="margin-top:10px">Urgence</label>
       <div class="chips" data-urg>
         <button class="chip ${r.urgence==='urgente'?'sel-urg':''}" data-u="urgente">Urgente</button>
         <button class="chip ${r.urgence==='non_urgente'?'sel':''}" data-u="non_urgente">Non urgente</button>
@@ -139,12 +133,6 @@ function bindVisite(){
     const cid=crit.getAttribute('data-crit');
     const obs=crit.querySelector('[data-obs]');
     if(obs)obs.oninput=()=>{v.results[cid]=v.results[cid]||{};v.results[cid].observation=obs.value;persistVisit();};
-    crit.querySelectorAll('[data-grav] .chip').forEach(c=>c.onclick=()=>{
-      v.results[cid]=v.results[cid]||{};const g=c.getAttribute('data-g');
-      v.results[cid].gravite=v.results[cid].gravite===g?'':g;
-      crit.querySelectorAll('[data-grav] .chip').forEach(x=>{x.className='chip';const xg=x.getAttribute('data-g');if(xg===v.results[cid].gravite)x.className='chip '+(xg==='mineure'?'sel-min':xg==='majeure'?'sel-maj':'sel-crit');});
-      persistVisit();
-    });
     crit.querySelectorAll('[data-urg] .chip').forEach(c=>c.onclick=()=>{
       v.results[cid]=v.results[cid]||{};const u=c.getAttribute('data-u');
       v.results[cid].urgence=v.results[cid].urgence===u?'':u;
@@ -195,7 +183,7 @@ function renderResume(){
       <div class="tile ${c.nok?'alert':''}"><div class="k">Écarts (NOK)</div><div class="v">${c.nok}</div></div>
     </div>
     <div class="section-title">${noks.length?noks.length+' action(s) générée(s)':'Aucun écart relevé'}</div>
-    ${noks.length?`<div class="card">${noks.map(n=>`<div class="lrow"><div class="main"><div class="t">${esc(n.label)}</div><div class="m">${esc(n.axe)}${n.observation?' · '+esc(n.observation):''}</div></div>${n.gravite?`<span class="badge ${n.gravite==='critique'?'g-nok':n.gravite==='majeure'?'g-amber':'g-ok'}">${n.gravite}</span>`:''}</div>`).join('')}</div>`:''}
+    ${noks.length?`<div class="card">${noks.map(n=>`<div class="lrow"><div class="main"><div class="t">${esc(n.label)}</div><div class="m">${esc(n.axe)}${n.observation?' · '+esc(n.observation):''}</div></div>${n.urgence==='urgente'?`<span class="badge open">Urgente</span>`:''}</div>`).join('')}</div>`:''}
 
     <div class="section-title">Points forts observés</div>
     <div class="card card-pad"><textarea id="r-forts" placeholder="Bonnes pratiques à valoriser (une par ligne)…" style="width:100%;min-height:58px;border:1px solid var(--line-strong);border-radius:10px;padding:10px">${esc(v.pointsForts||'')}</textarea></div>
@@ -220,7 +208,7 @@ async function saveVisitFinal(){
   for(const a of t.axes){for(const cr of a.criteria){const r=v.results[cr.id];
     if(r&&r.status==='nok'){
       await Store.put('actions',{id:uid('act'),visitId:v.id,date:v.date,templateName:v.templateName,secteur:v.secteur||'',
-        axeName:a.name,critLabel:cr.label,observation:r.observation||'',gravite:r.gravite||'',
+        axeName:a.name,critLabel:cr.label,observation:r.observation||'',
         urgence:r.urgence||'',photos:getPhotos(r),responsable:'',echeance:'',
         statut:'ouverte',createdAt:Date.now(),closedAt:null});
     }}}

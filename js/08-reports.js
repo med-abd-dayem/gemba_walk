@@ -9,7 +9,6 @@ function buildReport(v){
   let any=false;
   if(t)t.axes.forEach(a=>{a.criteria.forEach(cr=>{const r=v.results[cr.id];if(r&&r.status==='nok'){any=true;
     out+=`• [${a.name}] ${cr.label}`;
-    if(r.gravite)out+=` (${r.gravite})`;
     if(r.urgence)out+=r.urgence==='urgente'?' — URGENT':' — non urgent';
     if(r.observation)out+=`\n   Obs : ${r.observation}`;
     out+='\n';}});});
@@ -106,46 +105,46 @@ async function shareFile(blob,filename){
 function visitToXlsx(v){
   const t=state.cache.templates.find(x=>x.id===v.templateId);const conf=conformity(v);const c=counts(v);
   const T=x=>({v:x,s:2}),L=x=>({v:x,s:1}),Hd=x=>({v:x,s:3}),D=x=>({v:x,s:7}),AX=x=>({v:x,s:6});
-  const NC=6; // colonnes A..F : Élément, Statut, Observation, Gravité, Urgence, Photo
+  const NC=5; // colonnes A..E : Élément, Statut, Observation, Urgence, Photo
   const rows=[],merges=[],images=[],rowHeights={};
   const blank=()=>rows.push([]);
-  const full=(cell)=>{const r=[cell];for(let i=1;i<NC;i++)r.push('');rows.push(r);merges.push(`A${rows.length}:F${rows.length}`);};
+  const full=(cell)=>{const r=[cell];for(let i=1;i<NC;i++)r.push('');rows.push(r);merges.push(`A${rows.length}:E${rows.length}`);};
   // Bandeau titre + référence (comme le PDF)
   full(T('Rapport Gemba Walk — '+v.templateName));
   full({v:v.code||'',s:0});
   blank();
-  rows.push([L('Date :'),{v:frDate(v.date)},'',L('Tour fait par :'),{v:v.author||'—'},'']);
-  rows.push([L('Secteur :'),{v:v.secteur||'—'},'',L('Conformité :'),{v:conf==null?'—':conf+'%',s:conf!=null&&conf<70?5:4},'']);
-  rows.push([L('OK / NOK :'),{v:c.ok+' / '+c.nok},'','','','']);
+  rows.push([L('Date :'),{v:frDate(v.date)},'',L('Tour fait par :'),{v:v.author||'—'}]);
+  rows.push([L('Secteur :'),{v:v.secteur||'—'},'',L('Conformité :'),{v:conf==null?'—':conf+'%',s:conf!=null&&conf<70?5:4}]);
+  rows.push([L('OK / NOK :'),{v:c.ok+' / '+c.nok},'','','']);
   blank();
   // Tableaux par axe (comme le PDF)
   if(t)t.axes.forEach(a=>{
     full(AX(a.name));
-    rows.push([Hd('Élément'),Hd('Statut'),Hd('Observation'),Hd('Gravité'),Hd('Urgence'),Hd('Photo')]);
+    rows.push([Hd('Élément'),Hd('Statut'),Hd('Observation'),Hd('Urgence'),Hd('Photo')]);
     a.criteria.forEach(cr=>{const r=v.results[cr.id]||{};
       const st=r.status?(r.status==='na'?'N/A':r.status.toUpperCase()):'—';const ss=r.status==='ok'?4:r.status==='nok'?5:7;
-      rows.push([D(cr.label),{v:st,s:ss},D(r.observation||''),D(r.gravite||''),D(r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':''),D('')]);
+      rows.push([D(cr.label),{v:st,s:ss},D(r.observation||''),D(r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':''),D('')]);
       const phs=getPhotos(r);
-      if(phs.length){const ri=rows.length;const w=100,h=74,gap=6;rowHeights[ri]=Math.round(h*0.78)+8;phs.forEach((p,k)=>images.push({dataUrl:p,col:5,row:ri-1,wpx:w,hpx:h,colOffPx:3+k*(w+gap)}));}
+      if(phs.length){const ri=rows.length;const w=100,h=74,gap=6;rowHeights[ri]=Math.round(h*0.78)+8;phs.forEach((p,k)=>images.push({dataUrl:p,col:4,row:ri-1,wpx:w,hpx:h,colOffPx:3+k*(w+gap)}));}
     });
     blank();
   });
   // Points forts + remarques (comme le PDF)
   if(v.pointsForts&&v.pointsForts.trim()){full(AX('Points forts'));v.pointsForts.trim().split('\n').forEach(l=>{if(l.trim())full(D(l.trim()));});blank();}
   if(v.remarquesEquipe&&v.remarquesEquipe.trim()){full(AX('Remarques de l\'équipe'));full(D(v.remarquesEquipe.trim()));}
-  return xlsxBlob([{name:'Rapport',rows,cols:[30,10,42,12,13,18],merges,images,rowHeights,fit:true}]);
+  return xlsxBlob([{name:'Rapport',rows,cols:[30,10,44,14,18],merges,images,rowHeights,fit:true}]);
 }
 function actionsToXlsx(){
   const Hd=x=>({v:x,s:3}),D=x=>({v:x,s:7});
-  const rows=[[Hd('Date visite'),Hd('Secteur'),Hd('Formulaire'),Hd('Axe'),Hd('Élément'),Hd('Observation'),Hd('Gravité'),Hd('Urgence'),Hd('Photo'),Hd('Responsable'),Hd('Échéance'),Hd('Statut'),Hd('En retard')]];
+  const rows=[[Hd('Date visite'),Hd('Secteur'),Hd('Formulaire'),Hd('Axe'),Hd('Élément'),Hd('Observation'),Hd('Urgence'),Hd('Photo'),Hd('Responsable'),Hd('Échéance'),Hd('Statut'),Hd('En retard')]];
   state.cache.actions.forEach(a=>{const late=a.statut==='ouverte'&&a.echeance&&a.echeance<todayISO();const ss=a.statut==='terminee'?4:late?5:7;
-    rows.push([D(frDate(a.date)),D(a.secteur||''),D(a.templateName),D(a.axeName),D(a.critLabel),D(a.observation||''),D(a.gravite||''),D(a.urgence==='urgente'?'Urgente':a.urgence==='non_urgente'?'Non urgente':''),D(getPhotos(a).length?'Oui':'Non'),D(a.responsable||''),D(a.echeance?frDate(a.echeance):''),{v:a.statut==='terminee'?'Clôturée':'Ouverte',s:ss},D(late?'OUI':'')]);});
-  return xlsxBlob([{name:'Actions',rows,cols:[12,16,18,22,24,34,11,13,7,16,12,11,10],autofilter:'A1:M'+rows.length}]);
+    rows.push([D(frDate(a.date)),D(a.secteur||''),D(a.templateName),D(a.axeName),D(a.critLabel),D(a.observation||''),D(a.urgence==='urgente'?'Urgente':a.urgence==='non_urgente'?'Non urgente':''),D(getPhotos(a).length?'Oui':'Non'),D(a.responsable||''),D(a.echeance?frDate(a.echeance):''),{v:a.statut==='terminee'?'Clôturée':'Ouverte',s:ss},D(late?'OUI':'')]);});
+  return xlsxBlob([{name:'Actions',rows,cols:[12,16,18,22,24,34,13,7,16,12,11,10],autofilter:'A1:L'+rows.length}]);
 }
 function visitToPrintable(v){
   const t=state.cache.templates.find(x=>x.id===v.templateId);const conf=conformity(v);const c=counts(v);let ax='';
-  if(t)t.axes.forEach(a=>{ax+=`<h3>${esc(a.name)}</h3><table><thead><tr><th style="width:24%">Élément</th><th>Statut</th><th style="width:28%">Observation</th><th>Gravité</th><th>Urgence</th><th>Photo</th></tr></thead><tbody>`;
-    a.criteria.forEach(cr=>{const r=v.results[cr.id]||{};const st=r.status?(r.status==='na'?'N/A':r.status.toUpperCase()):'—';const cls=r.status==='ok'?'ok':r.status==='nok'?'nok':'';const urg=r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':'';const ph=getPhotos(r).map(p=>`<img src="${p}" style="max-width:88px;max-height:66px;border:1px solid #DCE2E8;border-radius:4px;display:inline-block;margin:0 3px 3px 0">`).join('');ax+=`<tr><td>${esc(cr.label)}</td><td class="${cls}">${st}</td><td>${esc(r.observation||'')}</td><td>${esc(r.gravite||'')}</td><td>${urg}</td><td>${ph}</td></tr>`;});ax+='</tbody></table>';});
+  if(t)t.axes.forEach(a=>{ax+=`<h3>${esc(a.name)}</h3><table><thead><tr><th style="width:26%">Élément</th><th>Statut</th><th style="width:30%">Observation</th><th>Urgence</th><th>Photo</th></tr></thead><tbody>`;
+    a.criteria.forEach(cr=>{const r=v.results[cr.id]||{};const st=r.status?(r.status==='na'?'N/A':r.status.toUpperCase()):'—';const cls=r.status==='ok'?'ok':r.status==='nok'?'nok':'';const urg=r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':'';const ph=getPhotos(r).map(p=>`<img src="${p}" style="max-width:88px;max-height:66px;border:1px solid #DCE2E8;border-radius:4px;display:inline-block;margin:0 3px 3px 0">`).join('');ax+=`<tr><td>${esc(cr.label)}</td><td class="${cls}">${st}</td><td>${esc(r.observation||'')}</td><td>${urg}</td><td>${ph}</td></tr>`;});ax+='</tbody></table>';});
   const forts=(v.pointsForts&&v.pointsForts.trim())?`<h3>Points forts</h3><ul style="margin:4px 0 8px 18px;font-size:12px">${v.pointsForts.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul>`:'';
   const rem=(v.remarquesEquipe&&v.remarquesEquipe.trim())?`<h3>Remarques de l'équipe</h3><p style="font-size:12px;margin:4px 0 8px">${esc(v.remarquesEquipe.trim())}</p>`:'';
   return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Gemba Walk — ${esc(v.templateName)}</title><style>*{font-family:Arial,Helvetica,sans-serif;color:#16232E;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:22px}.hd{border-bottom:3px solid #2C4A63;padding-bottom:10px;margin-bottom:12px}.hd h1{margin:0;font-size:19px;color:#1B3140}.hd .ref{color:#5A6B78;font-size:12px;margin-top:3px}.meta{font-size:13px;margin:8px 0}.meta b{color:#5A6B78}.kpis{display:flex;gap:10px;margin:12px 0}.kpi{border:1px solid #DCE2E8;border-radius:8px;padding:8px 14px;font-size:12px;color:#5A6B78}.kpi .v{font-size:20px;font-weight:700;color:#16232E}.conf{color:${conf!=null&&conf<70?'#D63A2E':'#1E8E5A'}!important}h3{font-size:13px;color:#1B3140;margin:16px 0 6px;border-left:4px solid #2C4A63;padding-left:8px}table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}th,td{border:1px solid #DCE2E8;padding:5px 7px;text-align:left;vertical-align:top}th{background:#F4F6F8;font-size:11px}td.ok{color:#1E8E5A;font-weight:700}td.nok{color:#D63A2E;font-weight:700}.sig img{border:1px solid #DCE2E8;border-radius:6px;max-width:200px;margin-top:4px}.ft{margin-top:22px;color:#8A98A4;font-size:10px;border-top:1px solid #DCE2E8;padding-top:8px}@media print{body{margin:12mm}h3{page-break-after:avoid}tr{page-break-inside:avoid}}</style></head><body><div class="hd"><h1>Rapport Gemba Walk — ${esc(v.templateName)}</h1><div class="ref">${esc(v.code||'')}</div></div><div class="meta"><b>Date :</b> ${frDate(v.date)} &nbsp;&nbsp; <b>Tour fait par :</b> ${esc(v.author||'—')}${v.secteur?' &nbsp;&nbsp; <b>Secteur :</b> '+esc(v.secteur):''}</div><div class="kpis"><div class="kpi">Conformité<div class="v conf">${conf==null?'—':conf+'%'}</div></div><div class="kpi">OK / NOK<div class="v">${c.ok} / ${c.nok}</div></div></div>${ax}${forts}${rem}<div class="ft">Généré via l'application Gemba Walk — SNIM · ${frDate(todayISO())}</div></body></html>`;

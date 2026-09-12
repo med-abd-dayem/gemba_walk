@@ -40,6 +40,12 @@ function renderAccueil(){
 
     ${(()=>{const ss=sectorStats();return ss.length?`<div class="section-title">Conformité par secteur</div><div class="card">${ss.map(s=>`<div class="lrow" data-sect-go="${esc(s.secteur)}"><div class="main"><div class="t">${esc(s.secteur)}</div><div class="m">${s.n} visite(s)${s.open?' · '+s.open+' action(s) ouverte(s)':''}</div></div><span class="badge ${s.conf==null?'g-amber':s.conf>=85?'g-ok':s.conf>=70?'g-amber':'g-nok'}">${s.conf==null?'—':s.conf+'%'}</span><span class="chev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span></div>`).join('')}</div>`:'';})()}
 
+    ${(()=>{const d=(typeof backupDaysAgo==='function')?backupDaysAgo():null;const need=(d===null||d>=3)&&visits.length>0;return need?`<div class="recurrent" data-do-backup style="background:var(--amber-bg);border-color:#f0d9a8;cursor:pointer">
+      <span class="ic" style="color:var(--amber)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+      <div style="flex:1"><div class="rt" style="color:#8a5a10">Sauvegarde recommandée</div><div class="rm" style="color:#8a5a10">${d===null?'Aucune sauvegarde encore effectuée':'Dernière sauvegarde il y a '+d+' jours'} — appuyez pour sauvegarder</div></div>
+      <span class="chev" style="color:var(--amber);align-self:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+    </div>`:'';})()}
+
     <div class="section-title">Dernières visites</div>
     ${visits.length?`<div class="card">${visits.slice(0,4).map(v=>visitRow(v)).join('')}</div>`
       :`<div class="empty"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg><p>Aucune visite pour le moment</p><span>Commencez votre première tournée Gemba.</span></div>`}
@@ -47,6 +53,7 @@ function renderAccueil(){
   ${tabbar('accueil')}`;
   bindCommon();
   const gr=$('[data-goto-retard]');if(gr)gr.onclick=()=>{_actFilter='retard';go('actions');};
+  const bkp=$('[data-do-backup]');if(bkp)bkp.onclick=async()=>{if(typeof shareBackup==='function'){await shareBackup();render();}};
   app.querySelectorAll('[data-sect-go]').forEach(b=>b.onclick=()=>{_histSect=b.getAttribute('data-sect-go');go('historique');});
 }
 function sectorStats(){
