@@ -106,7 +106,7 @@ function visitToXlsx(v){
   const t=state.cache.templates.find(x=>x.id===v.templateId);const conf=conformity(v);const c=counts(v);
   const T=x=>({v:x,s:2}),L=x=>({v:x,s:1}),Hd=x=>({v:x,s:3}),D=x=>({v:x,s:7}),AX=x=>({v:x,s:6});
   const NC=5; // colonnes A..E : Élément, Statut, Observation, Urgence, Photo
-  const rows=[],merges=[],images=[],rowHeights={};
+  const rows=[],merges=[],images=[],rowHeights={},photoList=[];
   const blank=()=>rows.push([]);
   const full=(cell)=>{const r=[cell];for(let i=1;i<NC;i++)r.push('');rows.push(r);merges.push(`A${rows.length}:E${rows.length}`);};
   // Bandeau titre + référence (comme le PDF)
@@ -123,16 +123,28 @@ function visitToXlsx(v){
     rows.push([Hd('Élément'),Hd('Statut'),Hd('Observation'),Hd('Urgence'),Hd('Photo')]);
     a.criteria.forEach(cr=>{const r=v.results[cr.id]||{};
       const st=statusLabel(r.status);const ss=r.status==='ok'?4:r.status==='nok'?5:7;
-      rows.push([D(cr.label),{v:st,s:ss},D(r.observation||''),D(r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':''),D('')]);
       const phs=getPhotos(r);
-      if(phs.length){const ri=rows.length;const w=100,h=74,gap=6;rowHeights[ri]=Math.round(h*0.78)+8;phs.forEach((p,k)=>images.push({dataUrl:p,col:4,row:ri-1,wpx:w,hpx:h,colOffPx:3+k*(w+gap)}));}
+      rows.push([D(cr.label),{v:st,s:ss},D(r.observation||''),D(r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':''),D(phs.length?'Oui':'Non')]);
+      phs.forEach(p=>photoList.push({label:cr.label,dataUrl:p}));
     });
     blank();
   });
   // Points forts + remarques (comme le PDF)
   if(v.pointsForts&&v.pointsForts.trim()){full(AX('Points forts'));v.pointsForts.trim().split('\n').forEach(l=>{if(l.trim())full(D(l.trim()));});blank();}
   if(v.remarquesEquipe&&v.remarquesEquipe.trim()){full(AX('Remarques de l\'équipe'));full(D(v.remarquesEquipe.trim()));}
-  return xlsxBlob([{name:'Rapport',rows,cols:[30,10,44,14,18],merges,images,rowHeights,fit:true}]);
+  // Section Photos (en bas, bien rangées)
+  if(photoList.length){
+    blank();full(AX('Photos ('+photoList.length+')'));
+    const W=250,H=185;
+    photoList.forEach(ph=>{
+      full({v:ph.label,s:1});
+      rows.push([]);const ri=rows.length;
+      rowHeights[ri]=Math.round(H*0.76)+10;
+      images.push({dataUrl:ph.dataUrl,col:0,row:ri-1,wpx:W,hpx:H,colOffPx:3,rowOffPx:3});
+      blank();
+    });
+  }
+  return xlsxBlob([{name:'Rapport',rows,cols:[30,10,44,14,10],merges,images,rowHeights,fit:true}]);
 }
 function actionsToXlsx(){
   const Hd=x=>({v:x,s:3}),D=x=>({v:x,s:7});
@@ -147,14 +159,13 @@ function visitToPrintable(v){
     a.criteria.forEach(cr=>{const r=v.results[cr.id]||{};const st=statusLabel(r.status);const cls=r.status==='ok'?'ok':r.status==='nok'?'nok':'';const urg=r.urgence==='urgente'?'Urgente':r.urgence==='non_urgente'?'Non urgente':'';const ph=getPhotos(r).map(p=>`<img src="${p}" style="max-width:88px;max-height:66px;border:1px solid #DCE2E8;border-radius:4px;display:inline-block;margin:0 3px 3px 0">`).join('');ax+=`<tr><td>${esc(cr.label)}</td><td class="${cls}">${st}</td><td>${esc(r.observation||'')}</td><td>${urg}</td><td>${ph}</td></tr>`;});ax+='</tbody></table>';});
   const forts=(v.pointsForts&&v.pointsForts.trim())?`<h3>Points forts</h3><ul style="margin:4px 0 8px 18px;font-size:12px">${v.pointsForts.trim().split('\n').filter(l=>l.trim()).map(l=>`<li>${esc(l.trim())}</li>`).join('')}</ul>`:'';
   const rem=(v.remarquesEquipe&&v.remarquesEquipe.trim())?`<h3>Remarques de l'équipe</h3><p style="font-size:12px;margin:4px 0 8px">${esc(v.remarquesEquipe.trim())}</p>`:'';
-  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Gemba Walk — ${esc(v.templateName)}</title><style>*{font-family:Arial,Helvetica,sans-serif;color:#16232E;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:22px}.hd{border-bottom:3px solid #2C4A63;padding-bottom:10px;margin-bottom:12px}.hd h1{margin:0;font-size:19px;color:#1B3140}.hd .ref{color:#5A6B78;font-size:12px;margin-top:3px}.meta{font-size:13px;margin:8px 0}.meta b{color:#5A6B78}.kpis{display:flex;gap:10px;margin:12px 0}.kpi{border:1px solid #DCE2E8;border-radius:8px;padding:8px 14px;font-size:12px;color:#5A6B78}.kpi .v{font-size:20px;font-weight:700;color:#16232E}.conf{color:${conf!=null&&conf<70?'#D63A2E':'#1E8E5A'}!important}h3{font-size:13px;color:#1B3140;margin:16px 0 6px;border-left:4px solid #2C4A63;padding-left:8px}table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}th,td{border:1px solid #DCE2E8;padding:5px 7px;text-align:left;vertical-align:top}th{background:#F4F6F8;font-size:11px}td.ok{color:#1E8E5A;font-weight:700}td.nok{color:#D63A2E;font-weight:700}.sig img{border:1px solid #DCE2E8;border-radius:6px;max-width:200px;margin-top:4px}.ft{margin-top:22px;color:#8A98A4;font-size:10px;border-top:1px solid #DCE2E8;padding-top:8px}@media print{body{margin:12mm}h3{page-break-after:avoid}tr{page-break-inside:avoid}}</style></head><body><div class="hd"><h1>Rapport Gemba Walk — ${esc(v.templateName)}</h1><div class="ref">${esc(v.code||'')}</div></div><div class="meta"><b>Date :</b> ${frDate(v.date)} &nbsp;&nbsp; <b>Tour fait par :</b> ${esc(v.author||'—')}${v.secteur?' &nbsp;&nbsp; <b>Secteur :</b> '+esc(v.secteur):''}</div><div class="kpis"><div class="kpi">Conformité<div class="v conf">${conf==null?'—':conf+'%'}</div></div><div class="kpi">Conforme / Écart<div class="v">${c.ok} / ${c.nok}</div></div></div>${ax}${forts}${rem}<div class="ft">Généré via l'application Gemba Walk — SNIM · ${frDate(todayISO())}</div></body></html>`;
+  return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>Gemba Walk — ${esc(v.templateName)}</title><style>*{font-family:Arial,Helvetica,sans-serif;color:#16232E;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{margin:22px}.hd{border-bottom:3px solid #2C4A63;padding-bottom:10px;margin-bottom:12px}.hd h1{margin:0;font-size:19px;color:#1B3140}.hd .ref{color:#5A6B78;font-size:12px;margin-top:3px}.meta{font-size:13px;margin:8px 0}.meta b{color:#5A6B78}.kpis{display:flex;gap:10px;margin:12px 0}.kpi{border:1px solid #DCE2E8;border-radius:8px;padding:8px 14px;font-size:12px;color:#5A6B78}.kpi .v{font-size:20px;font-weight:700;color:#16232E}.conf{color:${conf!=null&&conf<70?'#D63A2E':'#1E8E5A'}!important}h3{font-size:13px;color:#1B3140;margin:16px 0 6px;border-left:4px solid #2C4A63;padding-left:8px}table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}th,td{border:1px solid #DCE2E8;padding:5px 7px;text-align:left;vertical-align:top}th{background:#F4F6F8;font-size:11px}td.ok{color:#1E8E5A;font-weight:700}td.nok{color:#D63A2E;font-weight:700}.sig img{border:1px solid #DCE2E8;border-radius:6px;max-width:200px;margin-top:4px}.ft{margin-top:22px;color:#8A98A4;font-size:10px;border-top:1px solid #DCE2E8;padding-top:8px}.toolbar{position:fixed;top:0;left:0;right:0;background:#1B3140;display:flex;gap:10px;padding:10px 14px;z-index:99;box-shadow:0 2px 8px rgba(0,0,0,.2)}.toolbar button{border:none;border-radius:8px;padding:10px 16px;font-size:15px;font-weight:700;cursor:pointer}.tb-back{background:#41586b;color:#fff}.tb-print{background:#1E8E5A;color:#fff}body{padding-top:58px}@media print{body{margin:12mm;padding-top:0}.toolbar{display:none}h3{page-break-after:avoid}tr{page-break-inside:avoid}}</style></head><body><div class="toolbar"><button class="tb-back" onclick="window.close()">◀ Retour</button><button class="tb-print" onclick="window.print()">🖨 Imprimer / Enregistrer en PDF</button></div><div class="hd"><h1>Rapport Gemba Walk — ${esc(v.templateName)}</h1><div class="ref">${esc(v.code||'')}</div></div><div class="meta"><b>Date :</b> ${frDate(v.date)} &nbsp;&nbsp; <b>Tour fait par :</b> ${esc(v.author||'—')}${v.secteur?' &nbsp;&nbsp; <b>Secteur :</b> '+esc(v.secteur):''}</div><div class="kpis"><div class="kpi">Conformité<div class="v conf">${conf==null?'—':conf+'%'}</div></div><div class="kpi">Conforme / Écart<div class="v">${c.ok} / ${c.nok}</div></div></div>${ax}${forts}${rem}<div class="ft">Généré via l'application Gemba Walk — SNIM · ${frDate(todayISO())}</div></body></html>`;
 }
 function exportPDF(v){
   const html=visitToPrintable(v);
   const w=window.open('','_blank');
   if(!w){toast('Autorisez les pop-ups pour le PDF');return;}
-  w.document.open();w.document.write(html);w.document.close();
-  setTimeout(()=>{try{w.focus();w.print();}catch(e){}},600);
+  w.document.open();w.document.write(html);w.document.close();w.focus();
 }
 function exportVisitBtns(getV){
   return {
