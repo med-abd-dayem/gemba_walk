@@ -9,7 +9,7 @@ function renderHistorique(){
   app.innerHTML=`
   <header class="appbar"><h1>Historique</h1></header>
   <div class="screen">
-    ${secteurs.length?`<div class="chips" style="margin-bottom:14px">${F('__all','Tous les secteurs')}${secteurs.map(s=>F(s,s)).join('')}</div>`:''}
+    ${secteurs.length?`<div class="chips" style="margin-bottom:14px">${F('__all','Tous les services')}${secteurs.map(s=>F(s,s)).join('')}</div>`:''}
     <div class="section-title">Évolution de la conformité${_histSect!=='__all'?' — '+esc(_histSect):''}</div>
     <div class="card card-pad">${trendChart(done)}</div>
     ${(()=>{const st=axisStats(done);return st.length?`<div class="section-title">Statistiques par axe</div>

@@ -11,10 +11,10 @@ function renderReglages(){
     </div>
     <button class="pill-add" id="add-tpl" style="margin-bottom:20px">＋ Nouveau formulaire</button>
 
-    <div class="section-title">Secteurs / Lieux</div>
-    <div class="card"><div id="sect-list">${(state.cache.sectors||[]).map((s,i)=>`<div class="lrow" data-sect-row="${i}" style="padding:8px 15px"><input data-sect-input value="${esc(s)}" style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:8px" placeholder="Nom du secteur"><button class="delbtn" data-sect-del="${i}">×</button></div>`).join('')}</div>
-    <button class="pill-add" id="add-sect" style="margin:8px 15px 14px;border-radius:9px;padding:9px">＋ Secteur</button></div>
-    <button class="pill-add" id="save-sect" style="margin-bottom:20px;background:var(--steel);color:#fff;border-style:solid;border-color:var(--steel)">Enregistrer les secteurs</button>
+    <div class="section-title">Services / Lieux</div>
+    <div class="card"><div id="sect-list">${(state.cache.sectors||[]).map((s,i)=>`<div class="lrow" data-sect-row="${i}" style="padding:8px 15px"><input data-sect-input value="${esc(s)}" style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:8px" placeholder="Nom du service"><button class="delbtn" data-sect-del="${i}">×</button></div>`).join('')}</div>
+    <button class="pill-add" id="add-sect" style="margin:8px 15px 14px;border-radius:9px;padding:9px">＋ Service</button></div>
+    <button class="pill-add" id="save-sect" style="margin-bottom:20px;background:var(--steel);color:#fff;border-style:solid;border-color:var(--steel)">Enregistrer les services</button>
 
     <div class="section-title">Sauvegarde des données</div>
     <div class="card card-pad">
@@ -36,7 +36,7 @@ function renderReglages(){
   const collectSect=()=>[...app.querySelectorAll('[data-sect-input]')].map(i=>i.value.trim()).filter(Boolean);
   const addS=$('#add-sect');if(addS)addS.onclick=async()=>{const list=collectSect();list.push('');await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;renderReglages();};
   app.querySelectorAll('[data-sect-del]').forEach(b=>b.onclick=async()=>{const list=collectSect();list.splice(+b.getAttribute('data-sect-del'),1);await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;renderReglages();});
-  const saveS=$('#save-sect');if(saveS)saveS.onclick=async()=>{const list=collectSect();await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;toast('Secteurs enregistrés');renderReglages();};
+  const saveS=$('#save-sect');if(saveS)saveS.onclick=async()=>{const list=collectSect();await Store.put('settings',{id:'sectors',list});state.cache.sectors=list;toast('Services enregistrés');renderReglages();};
   const bn=$('#backup-now');if(bn)bn.onclick=async()=>{await shareBackup();renderReglages();};
   $('#import').onchange=importData;
 }

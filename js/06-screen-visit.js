@@ -6,7 +6,7 @@ function renderNouvelle(){
   <header class="appbar"><span class="back" data-go="accueil"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg></span><h1>Nouvelle visite</h1></header>
   <div class="screen">
     <div class="card card-pad">
-      <div class="field"><label>Secteur / Lieu</label>
+      <div class="field"><label>Service / Lieu</label>
         <select id="f-sect">${(state.cache.sectors||[]).map(s=>`<option>${esc(s)}</option>`).join('')}${(state.cache.sectors||[]).length?'':'<option>Général</option>'}</select>
       </div>
       <div class="field"><label>Formulaire</label>
@@ -16,7 +16,7 @@ function renderNouvelle(){
       <div class="field"><label>Tour fait par <span style="color:var(--nok)">*</span></label><input type="text" id="f-author" placeholder="Nom du responsable (obligatoire)"></div>
       <button class="btn btn-primary" id="f-start">Commencer la visite</button>
     </div>
-    <p class="fab-note">Secteurs et formulaires sont personnalisables dans <b>Réglages</b>.</p>
+    <p class="fab-note">Services et formulaires sont personnalisables dans <b>Réglages</b>.</p>
   </div>
   ${tabbar('')}`;
   bindCommon();
