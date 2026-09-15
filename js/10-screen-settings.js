@@ -23,11 +23,6 @@ function renderReglages(){
       <label class="btn btn-ghost" style="margin-top:10px;display:flex">Restaurer une sauvegarde<input type="file" accept="application/json" id="import" hidden></label>
       <p class="fab-note" style="margin-top:12px;text-align:left">Les données sont stockées uniquement sur cet appareil. « Sauvegarder » crée un fichier <code>.json</code> à envoyer par e-mail / WhatsApp (à toi-même ou à un responsable). Il permet de <b>tout restaurer</b> en cas de perte du téléphone.</p>
     </div>
-
-    <div class="section-title">Application</div>
-    <div class="card card-pad">
-      <div class="muted" style="font-size:13.5px;line-height:1.6">Gemba Walk · SNIM<br>Version 1.0 · Fonctionne hors ligne<br>Ajoutez l'app à l'écran d'accueil pour un accès rapide.</div>
-    </div>
   </div>
   ${tabbar('reglages')}`;
   bindCommon();
