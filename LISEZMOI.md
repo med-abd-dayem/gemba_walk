@@ -43,7 +43,7 @@ Reste entièrement sur le **forfait gratuit Spark** — aucune carte bancaire n�
    - **Important** : si le fournisseur **« Anonyme »** a été activé à un moment, le **désactiver** — sinon n'importe qui connaissant les clés publiques du projet (visibles dans le code) pourrait s'authentifier anonymement en contournant complètement l'écran de connexion.
    - **Authentication → Settings → Authorized domains** : ajouter le domaine d'hébergement (ex. `med-abd-dayem.github.io`) — sans ça, le lien de connexion échoue une fois déployé (`localhost` est autorisé par défaut, donc les tests en local fonctionnent sans cette étape).
 2. Copier la configuration du projet (Paramètres du projet → Général → « Vos applications » → icône `</>`) dans `js/00-firebase-config.js`, à la place des valeurs `REMPLACER_MOI`.
-3. Dans Firestore → Rules, restreindre l'accès aux adresses **@snim.com** — important car la connexion par lien e-mail crée automatiquement un compte pour n'importe quelle adresse, pas seulement celles créées manuellement dans Authentication → Users :
+3. Dans Firestore → Rules, restreindre l'accès aux adresses **@snim.com** (+ une exception pour l'administrateur) — important car la connexion par lien e-mail crée automatiquement un compte pour n'importe quelle adresse, pas seulement celles créées manuellement dans Authentication → Users :
    ```
    rules_version = '2';
    service cloud.firestore {
@@ -51,12 +51,15 @@ Reste entièrement sur le **forfait gratuit Spark** — aucune carte bancaire n�
        match /{document=**} {
          allow read, write: if request.auth != null
            && request.auth.token.email_verified == true
-           && request.auth.token.email.lower().matches('.*@snim[.]com$');
+           && (
+             request.auth.token.email.lower().matches('.*@snim[.]com$')
+             || request.auth.token.email.lower() == 'medabddayemtl@gmail.com'
+           );
        }
      }
    }
    ```
-4. Recharger l'application : l'écran de connexion apparaît, chaque membre se connecte avec son adresse **@snim.com**. Aucune création manuelle de compte n'est nécessaire — la règle ci-dessus s'en charge automatiquement.
+4. Recharger l'application : l'écran de connexion apparaît, chaque membre se connecte avec son adresse **@snim.com** (ou l'adresse admin autorisée ci-dessus). Aucune création manuelle de compte n'est nécessaire — la règle ci-dessus s'en charge automatiquement.
 
 **Limite à connaître** : chaque document Firestore est plafonné à 1 Mo. Les photos sont compressées (900 px, JPEG 60 %) avant stockage pour rester loin de cette limite, mais une visite avec un très grand nombre de photos pourrait théoriquement l'atteindre — un cas rare en usage normal.
 
