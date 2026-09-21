@@ -8,7 +8,7 @@ function renderLogin(msg){
   <div class="screen">
     ${!FIREBASE_CONFIGURED?`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><p>Configuration Firebase manquante</p><span>Renseignez js/00-firebase-config.js avec les identifiants de votre projet Firebase.</span></div>`:`
     <div class="card card-pad">
-      <div class="field"><label>E-mail</label><input type="email" id="lg-email" autocomplete="username" placeholder="prenom.nom@snim.mr"></div>
+      <div class="field"><label>E-mail</label><input type="email" id="lg-email" autocomplete="username" placeholder="prenom.nom@snim.com"></div>
       ${msg?`<p style="color:var(--nok);font-size:13px;margin:4px 0 10px">${esc(msg)}</p>`:''}
       <button class="btn btn-primary" id="lg-submit">Recevoir le lien de connexion</button>
     </div>
@@ -51,7 +51,7 @@ function renderConfirmEmailForLink(){
     <header class="appbar"><h1>Gemba Walk <span class="sub">Connexion</span></h1></header>
     <div class="screen">
       <div class="card card-pad">
-        <div class="field"><label>Confirmez votre e-mail</label><input type="email" id="ce-email" autocomplete="username" placeholder="prenom.nom@snim.mr"></div>
+        <div class="field"><label>Confirmez votre e-mail</label><input type="email" id="ce-email" autocomplete="username" placeholder="prenom.nom@snim.com"></div>
         <button class="btn btn-primary" id="ce-submit">Continuer</button>
       </div>
       <p class="fab-note">Ce lien a été ouvert sur un autre appareil que celui utilisé pour le demander — merci de reconfirmer votre e-mail.</p>
