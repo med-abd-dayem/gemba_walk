@@ -21,6 +21,10 @@ async function boot(){
   app.addEventListener('click',e=>{const im=e.target.closest('.photo-thumb img');if(im){const s=im.getAttribute('src');if(s)openPhoto(s);}});
   if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('sw.js');}catch(e){}}
   if(!FIREBASE_CONFIGURED){renderLogin();return;}
+  if(auth.isSignInWithEmailLink(location.href)){
+    const ok=await completeEmailLinkSignIn();
+    if(!ok)return; // erreur déjà affichée par completeEmailLinkSignIn
+  }
   auth.onAuthStateChanged(user=>{
     if(user)startApp();
     else renderLogin();
