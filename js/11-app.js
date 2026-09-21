@@ -20,10 +20,10 @@ async function startApp(){
 async function boot(){
   app.addEventListener('click',e=>{const im=e.target.closest('.photo-thumb img');if(im){const s=im.getAttribute('src');if(s)openPhoto(s);}});
   if('serviceWorker' in navigator){try{await navigator.serviceWorker.register('sw.js');}catch(e){}}
-  if(!FIREBASE_CONFIGURED){renderAuthGate();return;}
+  if(!FIREBASE_CONFIGURED){renderLogin();return;}
   auth.onAuthStateChanged(user=>{
     if(user)startApp();
-    else auth.signInAnonymously().catch(err=>renderAuthGate(err));
+    else renderLogin();
   });
 }
 boot();

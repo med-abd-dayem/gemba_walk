@@ -16,9 +16,10 @@ function renderReglages(){
     <button class="pill-add" id="add-sect" style="margin:8px 15px 14px;border-radius:9px;padding:9px">＋ Service</button></div>
     <button class="pill-add" id="save-sect" style="margin-bottom:20px;background:var(--steel);color:#fff;border-style:solid;border-color:var(--steel)">Enregistrer les services</button>
 
-    <div class="section-title">Synchronisation</div>
+    <div class="section-title">Compte</div>
     <div class="card card-pad">
-      <p class="fab-note" style="margin:0;text-align:left">Les données sont centralisées dans le cloud et partagées entre tous les membres de l'équipe, en temps réel.</p>
+      <p class="fab-note" style="margin:0 0 12px;text-align:left">Connecté : <b>${esc((auth&&auth.currentUser&&auth.currentUser.email)||'—')}</b><br>Les données sont centralisées dans le cloud et partagées entre tous les membres de l'équipe, en temps réel.</p>
+      <button class="btn btn-ghost" id="logout">Se déconnecter</button>
     </div>
 
     <div class="section-title">Sauvegarde des données</div>
@@ -32,6 +33,7 @@ function renderReglages(){
   </div>
   ${tabbar('reglages')}`;
   bindCommon();
+  const lo=$('#logout');if(lo)lo.onclick=async()=>{if(auth)await auth.signOut();};
   const ml=$('#migrate-local');if(ml)ml.onclick=migrateLocalToCloud;
   $('#add-tpl').onclick=()=>{state.editTpl={id:uid('tpl'),name:'',code:'',axes:defaultAxes(),createdAt:Date.now(),_new:true};go('template');};
   app.querySelectorAll('[data-dup-tpl]').forEach(b=>b.onclick=async(e)=>{e.stopPropagation();await duplicateTpl(b.getAttribute('data-dup-tpl'));});
